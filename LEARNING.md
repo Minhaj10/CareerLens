@@ -111,3 +111,63 @@ A: SSR means the page HTML is generated on the server before
 
 ---
 
+## Middleware
+### What I learned
+- Middleware is a function that runs between request and response
+- Like a security guard — checks token before allowing access
+- Uses next() to pass control to the next function
+- Applied with app.use() or per route
+
+### Possible Interview Questions
+Q: What is middleware in Express?
+A: Middleware is a function that has access to request, response,
+   and the next function. It runs between receiving a request and
+   sending a response. Common uses: authentication, logging, parsing.
+
+Q: How does JWT authentication middleware work?
+A: It extracts the token from the Authorization header, verifies it
+   using the secret key, and if valid attaches the userId to the
+   request object so the route handler can use it.
+
+Q: What is the next() function in Express middleware?
+A: next() passes control to the next middleware or route handler.
+   If you don't call next(), the request will hang and never get
+   a response.
+
+## HTTP Status Codes
+### What I learned
+- 200 → OK (success)
+- 201 → Created (new resource created)
+- 400 → Bad Request (user sent wrong data)
+- 401 → Unauthorized (not logged in)
+- 403 → Forbidden (logged in but no permission)
+- 404 → Not Found
+- 500 → Server Error
+
+### Possible Interview Questions
+Q: What is the difference between 401 and 403?
+A: 401 means the user is not authenticated (not logged in).
+   403 means the user is authenticated but doesn't have
+   permission to access that resource.
+
+Q: What status code do you return when creating a new resource?
+A: 201 Created — not 200. 200 is for successful GET requests.
+   201 specifically means a new resource was created.
+
+## bcrypt
+### What I learned
+- bcrypt is used to hash passwords before saving to database
+- Hashing is one way — you cannot reverse it
+- When login happens, bcrypt compares the input with the hash
+- Salt rounds determine how strong the hash is (10 is standard)
+
+### Possible Interview Questions
+Q: Why do we hash passwords?
+A: If the database is hacked, attackers get hashed passwords
+   not real ones. Hashing is one-way so they cannot reverse it
+   to get the original password.
+
+Q: What is the difference between hashing and encryption?
+A: Encryption is two-way — you can decrypt it back.
+   Hashing is one-way — you cannot reverse it.
+   Passwords should always be hashed, never encrypted.

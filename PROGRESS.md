@@ -19,5 +19,20 @@
 - Start frontend login/register pages
 
 ---
+## May 16, 2026
+### ✅ What I did today
+- Fixed API testing using curl
+- Discovered Mac port 5000 was blocked by ControlCenter, moved to port 8000
+- Built auth middleware to protect private routes
+- Tested protected routes with and without JWT token
+- Both register and login API routes working perfectly
 
+### ❌ Blockers
+- Port 5000 blocked by Mac ControlCenter — fixed by switching to 8000
+- Postman giving 403 — switched to curl instead
+
+### 🎯 Tomorrow's Goal
+- Build Job model
+- Build CRUD routes for jobs
+- Test all job routes with curl
 -
