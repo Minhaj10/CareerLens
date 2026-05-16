@@ -1,9 +1,9 @@
-import express from 'express';
+import express, { Response } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
-
+import authMiddleware, { AuthRequest } from './middleware/authMiddleware';
 dotenv.config();
 
 const app = express();
@@ -16,9 +16,14 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 
+
 // Test route
 app.get('/', (req, res) => {
   res.json({ message: 'CareerLens API is running 🚀' });
+});
+// Protected test route
+app.get('/api/protected', authMiddleware, (req: AuthRequest, res: Response) => {
+  res.json({ message: `Hello user ${req.userId} — you are authorized! ✅` });
 });
 
 // Connect to MongoDB
