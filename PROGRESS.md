@@ -35,4 +35,22 @@
 - Build Job model
 - Build CRUD routes for jobs
 - Test all job routes with curl
+
+## May 19, 2026
+### What I did today
+- Built Job model with full TypeScript interface
+- Built 4 CRUD routes — GET, POST, PUT, DELETE
+- All routes protected with JWT auth middleware
+- Tested all routes successfully with curl
+- Solved LeetCode Two Sum — learned HashMap pattern
+- Created DSA problem solving notebook
+
+### Blockers
+- curl multi-line commands breaking in terminal
+- Fixed by running everything on one line
+
+### Tomorrow's goal
+- Start Next.js frontend
+- Build login and register pages
+- Connect frontend to backend API
 -
