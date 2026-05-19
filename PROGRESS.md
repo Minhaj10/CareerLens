@@ -53,4 +53,25 @@
 - Start Next.js frontend
 - Build login and register pages
 - Connect frontend to backend API
+
+## May 19, 2026
+### ✅ What I did today
+- Built login page with form validation
+- Built register page connected to backend
+- Built dashboard page showing all jobs
+- Created lib/api.ts to handle all API calls
+- Learned how Next.js routing works
+- Learned how useEffect and async/await work
+- Solved 3 LeetCode problems:
+  - Two Sum #1 — HashMap pattern
+  - Best Time to Buy and Sell Stock #121 — Greedy
+  - Contains Duplicate #217 — unordered_set
+
+### ❌ Blockers
+- None today!
+
+### 🎯 Tomorrow's Goal
+- Add job form on dashboard
+- User can add new job from frontend
+- Style the dashboard better with Tailwind
 -

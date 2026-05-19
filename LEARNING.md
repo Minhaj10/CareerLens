@@ -171,3 +171,66 @@ Q: What is the difference between hashing and encryption?
 A: Encryption is two-way — you can decrypt it back.
    Hashing is one-way — you cannot reverse it.
    Passwords should always be hashed, never encrypted.
+
+   Q: What is async/await in JavaScript?
+A: async/await is syntax for handling promises cleanly.
+   await pauses execution until the promise resolves.
+   Without it, code runs before the data arrives.
+
+Q: What is useEffect in React?
+A: useEffect runs code after the component renders.
+   The empty [] dependency array means it runs once
+   when the page first loads — perfect for fetching data.
+
+Q: What is React state (useState)?
+A: State is data that when changed, causes React to
+   re-render the component automatically.
+   setJobs(data) updates state → page re-renders with jobs.
+
+   ## Next.js Routing
+### What I learned
+- Every file in app/ folder = a URL automatically
+- app/login/page.tsx = localhost:3000/login
+- No manual routing config needed
+
+### Interview Questions
+Q: How does routing work in Next.js?
+A: File-based routing. Every page.tsx inside app/
+   folder becomes a URL automatically.
+
+Q: What is the difference between Link and router.push?
+A: Link is for clickable navigation in JSX.
+   router.push() is for programmatic redirect in code
+   e.g. after login succeeds.
+
+## useEffect + async/await
+### What I learned
+- useEffect runs code after component renders
+- Empty [] means run once on page load
+- await pauses until server responds
+- Without await you get a Promise not real data
+
+### Interview Questions
+Q: What is useEffect used for?
+A: Running side effects after render — fetching data,
+   setting up subscriptions, updating the DOM.
+
+Q: What happens if you forget await?
+A: You get a Promise object instead of real data.
+   setJobs(Promise) instead of setJobs([...jobs])
+
+## set vs unordered_set
+### What I learned
+- set → sorted, O(log n) lookup, BST internally
+- unordered_set → unsorted, O(1) lookup, HashMap internally
+- Use unordered_set when you don't need order
+
+### Interview Questions
+Q: When would you use set over unordered_set?
+A: When you need sorted data or need to iterate
+   in order. Otherwise unordered_set is faster.
+
+Q: What is the difference between map and set?
+A: map stores key-value pairs.
+   set stores keys only.
+   Use set when you just need to track existence.
