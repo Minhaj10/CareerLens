@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
-import authMiddleware, { AuthRequest } from './middleware/authMiddleware';
 import jobRoutes from './routes/jobs';
 dotenv.config();
 
@@ -23,9 +22,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'CareerLens API is running 🚀' });
 });
 // Protected test route
-app.get('/api/protected', authMiddleware, (req: AuthRequest, res: Response) => {
-  res.json({ message: `Hello user ${req.userId} — you are authorized! ✅` });
-});
+
 
 // Connect to MongoDB
 mongoose
