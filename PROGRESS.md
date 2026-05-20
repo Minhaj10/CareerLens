@@ -75,3 +75,26 @@
 - User can add new job from frontend
 - Style the dashboard better with Tailwind
 -
+## May 21, 2026
+### ✅ What I did today
+- Built Add Job form on dashboard
+- Jobs now save from frontend to MongoDB instantly
+- Fixed TypeScript error in server.ts (removed test route)
+- Fixed frontend submodule git issue
+- Added error handling and loading states
+- Got code review — score 8.5/10
+- Solved 2 LeetCode problems:
+  - Valid Anagram #242 — HashMap char counting
+  - Revised Contains Duplicate #217
+
+### ❌ Blockers
+- VS Code AI tool corrupted dashboard file — learned
+  to always undo AI suggestions carefully
+- Git submodule issue with frontend folder — fixed
+  by removing frontend/.git
+
+### 🎯 Tomorrow's Goal (Day 6)
+- Add delete job functionality from frontend
+- Add update job status from frontend
+- Make dashboard look more polished
+- LeetCode — Valid Palindrome #125

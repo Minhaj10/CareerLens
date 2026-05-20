@@ -234,3 +234,70 @@ Q: What is the difference between map and set?
 A: map stores key-value pairs.
    set stores keys only.
    Use set when you just need to track existence.
+
+## Environment Variables
+### What I learned
+- Never hardcode URLs in your code
+- Use environment variables for anything that changes
+  between development and production
+- In Next.js, prefix with NEXT_PUBLIC_ to use in browser
+- Example:
+  NEXT_PUBLIC_API_URL=http://localhost:8000/api
+
+### Interview Questions
+Q: Why use environment variables?
+A: To separate config from code. URLs, API keys, secrets
+   change between dev and production. Env vars make this
+   easy to manage without changing code.
+
+Q: What is the difference between .env and .env.example?
+A: .env has real secret values — never commit to GitHub.
+   .env.example shows what variables are needed with
+   fake values — safe to commit so others know what to set.
+
+## Input Validation
+### What I learned
+- Always validate user input on the backend
+- Never trust data coming from frontend
+- Check required fields exist before saving to database
+- Return 400 Bad Request for invalid input
+
+### Interview Questions
+Q: Why validate on backend if you already validate frontend?
+A: Frontend validation can be bypassed — anyone can send
+   direct API requests with curl or Postman. Backend is
+   the last line of defence.
+
+Q: What HTTP status code for invalid input?
+A: 400 Bad Request — means client sent wrong/missing data.
+
+## TypeScript — char vs string
+### What I learned
+- In C++, single characters are char type not string
+- unordered_map<char, int> for character counting
+- unordered_map<string, int> for word counting
+- auto it : s gives char when s is a string
+
+### Interview Questions
+Q: What is the difference between char and string in C++?
+A: char is a single character — 1 byte.
+   string is a sequence of characters.
+   'a' is a char. "hello" is a string.
+
+## Anagram Pattern
+### What I learned
+- Anagram = same letters, same count, any order
+- One HashMap approach:
+  count UP for string s
+  count DOWN for string t
+  if all zeros → anagram
+- Early exit: if lengths differ → not anagram
+
+### Interview Questions
+Q: How to check anagram in O(n)?
+A: One HashMap. Count up for s, count down for t.
+   If all values zero → anagram.
+
+Q: What is the space complexity of anagram check?
+A: O(1) technically — only 26 letters in alphabet.
+   Map never grows beyond 26 keys regardless of input size.
