@@ -11,6 +11,7 @@ interface Job {
   salary: number;
   notes: string;
   appliedDate: string;
+  jobUrl: string;
 }
 
 interface JobForm {
@@ -20,17 +21,17 @@ interface JobForm {
   salary: string;
   notes: string;
   jobUrl: string;
+  appliedDate: string;
 }
-
 const emptyForm: JobForm = {
   company: '',
   role: '',
   status: 'Applied',
   salary: '',
   notes: '',
-  jobUrl: ''
+  jobUrl: '',
+  appliedDate: new Date().toISOString().slice(0, 10) // ← today's date
 };
-
 export default function DashboardPage() {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -39,6 +40,26 @@ export default function DashboardPage() {
   const [form, setForm] = useState<JobForm>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+const [filterStatus, setFilterStatus] = useState('All');
+const [sortBy, setSortBy] = useState('date');
+const [editingJob, setEditingJob] = useState<Job | null>(null);
+const [editForm, setEditForm] = useState<JobForm>(emptyForm);
+
+const filteredJobs = jobs
+  .filter(j => {
+    const matchSearch = 
+      j.company.toLowerCase().includes(search.toLowerCase()) ||
+      j.role.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === 'All' || j.status === filterStatus;
+    return matchSearch && matchStatus;
+  })
+  .sort((a, b) => {
+    if (sortBy === 'date') return new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime();
+    if (sortBy === 'salary') return b.salary - a.salary;
+    if (sortBy === 'company') return a.company.localeCompare(b.company);
+    return 0;
+  });
 
   useEffect(() => {
     const token = getToken();
@@ -90,6 +111,33 @@ export default function DashboardPage() {
     setJobs(jobs.map(j => j._id === jobId ? updated : j));
   };
 
+ const handleEditJob = (job: Job) => {
+  setEditingJob(job);
+  setEditForm({
+    company: job.company,
+    role: job.role,
+    status: job.status,
+    salary: job.salary.toString(),
+    notes: job.notes || '',
+    jobUrl: job.jobUrl || '',
+    appliedDate: job.appliedDate 
+      ? job.appliedDate.slice(0, 10)  // ← convert to YYYY-MM-DD
+      : new Date().toISOString().slice(0, 10)
+  });
+};
+
+const handleSaveEdit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!editingJob) return;
+  const token = getToken() as string;
+  const updated = await api.updateJob(token, editingJob._id, {
+    ...editForm,
+    salary: Number(editForm.salary) || 0
+  });
+  setJobs(jobs.map(j => j._id === editingJob._id ? updated : j));
+  setEditingJob(null);
+};
+
   const handleLogout = () => {
     removeToken();
     router.push('/login');
@@ -110,7 +158,7 @@ export default function DashboardPage() {
         <h1 className="text-xl font-bold text-gray-900">CareerLens</h1>
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => { setShowForm(!showForm); setEditingJob(null); }}
             className="bg-gray-900 text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
           >
             {showForm ? 'Cancel' : '+ Add Job'}
@@ -131,39 +179,21 @@ export default function DashboardPage() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Application</h2>
             {error && (
-              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">
-                {error}
-              </div>
+              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">{error}</div>
             )}
             <form onSubmit={handleAddJob} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
-                  <input
-                    required
-                    value={form.company}
-                    onChange={e => setForm({ ...form, company: e.target.value })}
-                    placeholder="Google"
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  />
+                  <input required value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} placeholder="Google" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
-                  <input
-                    required
-                    value={form.role}
-                    onChange={e => setForm({ ...form, role: e.target.value })}
-                    placeholder="Frontend Developer"
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  />
+                  <input required value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder="Frontend Developer" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    value={form.status}
-                    onChange={e => setForm({ ...form, status: e.target.value })}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  >
+                  <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
                     <option>Applied</option>
                     <option>Interview</option>
                     <option>Offer</option>
@@ -172,42 +202,79 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
-                  <input
-                    type="number"
-                    value={form.salary}
-                    onChange={e => setForm({ ...form, salary: e.target.value })}
-                    placeholder="120000"
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  />
+                  <input type="number" value={form.salary} onChange={e => setForm({ ...form, salary: e.target.value })} placeholder="120000" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Applied Date</label>
+                  <input type="date" value={form.appliedDate} onChange={e => setForm({ ...form, appliedDate: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Job URL</label>
+                  <input value={form.jobUrl} onChange={e => setForm({ ...form, jobUrl: e.target.value })} placeholder="https://linkedin.com/jobs/..." className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Job URL</label>
-                <input
-                  value={form.jobUrl}
-                  onChange={e => setForm({ ...form, jobUrl: e.target.value })}
-                  placeholder="https://linkedin.com/jobs/..."
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                />
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea
-                  value={form.notes}
-                  onChange={e => setForm({ ...form, notes: e.target.value })}
-                  placeholder="Applied via LinkedIn, referral from John..."
-                  rows={2}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
-                />
+                <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Applied via LinkedIn..." rows={2} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none" />
               </div>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-gray-900 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
+              <button type="submit" disabled={submitting} className="w-full bg-gray-900 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50">
                 {submitting ? 'Adding...' : 'Add Application'}
               </button>
             </form>
+          </div>
+        )}
+
+        {/* Edit Job Modal */}
+        {editingJob && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 z-20 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 w-full max-w-lg shadow-xl">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Edit Application</h2>
+              <form onSubmit={handleSaveEdit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                    <input required value={editForm.company} onChange={e => setEditForm({ ...editForm, company: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                    <input required value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
+                      <option>Applied</option>
+                      <option>Interview</option>
+                      <option>Offer</option>
+                      <option>Rejected</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
+                    <input type="number" value={editForm.salary} onChange={e => setEditForm({ ...editForm, salary: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Applied Date</label>
+                    <input type="date" value={editForm.appliedDate} onChange={e => setEditForm({ ...editForm, appliedDate: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Job URL</label>
+                    <input value={editForm.jobUrl} onChange={e => setEditForm({ ...editForm, jobUrl: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <textarea value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} rows={2} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none" />
+                </div>
+                <div className="flex gap-3">
+                  <button type="submit" className="flex-1 bg-gray-900 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-gray-700 transition-colors">
+                    Save Changes
+                  </button>
+                  <button type="button" onClick={() => setEditingJob(null)} className="flex-1 bg-gray-100 text-gray-700 rounded-lg py-2.5 text-sm font-medium hover:bg-gray-200 transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
@@ -226,18 +293,52 @@ export default function DashboardPage() {
           ))}
         </div>
 
+        {/* Search + Filter + Sort */}
+        <div className="flex gap-3 mb-6 flex-wrap">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search company or role..."
+            className="flex-1 min-w-48 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+          />
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+          >
+            <option value="All">All Status</option>
+            <option>Applied</option>
+            <option>Interview</option>
+            <option>Offer</option>
+            <option>Rejected</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+          >
+            <option value="date">Sort: Date</option>
+            <option value="salary">Sort: Salary</option>
+            <option value="company">Sort: Company</option>
+          </select>
+        </div>
+
         {/* Jobs List */}
         {loading ? (
           <div className="text-center text-gray-400 py-20">Loading...</div>
-        ) : jobs.length === 0 ? (
+        ) : filteredJobs.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-4xl mb-4">📋</div>
-            <div className="text-lg font-medium text-gray-600">No applications yet</div>
-            <div className="text-sm text-gray-400 mt-1">Click "+ Add Job" to get started</div>
+            <div className="text-lg font-medium text-gray-600">
+              {search || filterStatus !== 'All' ? 'No jobs match your search' : 'No applications yet'}
+            </div>
+            <div className="text-sm text-gray-400 mt-1">
+              {search || filterStatus !== 'All' ? 'Try different filters' : 'Click "+ Add Job" to get started'}
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
-            {jobs.map((job) => (
+            {filteredJobs.map((job) => (
               <div key={job._id} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition-shadow">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -252,9 +353,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     {job.salary > 0 && (
-                      <div className="text-sm text-gray-500">
-                        ${job.salary.toLocaleString()}
-                      </div>
+                      <div className="text-sm text-gray-500">${job.salary.toLocaleString()}</div>
                     )}
                     <span className={`text-xs font-medium px-3 py-1 rounded-full ${statusColor[job.status]}`}>
                       {job.status}
@@ -280,8 +379,14 @@ export default function DashboardPage() {
                     </button>
                   ))}
                   <button
+                    onClick={() => handleEditJob(job)}
+                    className="ml-auto text-xs text-blue-400 hover:text-blue-600 transition-colors mr-3"
+                  >
+                    Edit
+                  </button>
+                  <button
                     onClick={() => handleDeleteJob(job._id)}
-                    className="ml-auto text-xs text-red-400 hover:text-red-600 transition-colors"
+                    className="text-xs text-red-400 hover:text-red-600 transition-colors"
                   >
                     Delete
                   </button>
@@ -293,4 +398,5 @@ export default function DashboardPage() {
       </div>
     </div>
   );
+
 }
