@@ -18,14 +18,23 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 // POST create new job
+// POST create new job
 router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     const { company, role, status, notes, salary, jobUrl } = req.body;
 
+    // ✅ Input validation
+    if (!company || company.trim() === '') {
+      return res.status(400).json({ message: 'Company is required' });
+    }
+    if (!role || role.trim() === '') {
+      return res.status(400).json({ message: 'Role is required' });
+    }
+
     const job = new Job({
       userId: req.userId,
-      company,
-      role,
+      company: company.trim(),
+      role: role.trim(),
       status: status || 'Applied',
       notes,
       salary,

@@ -77,10 +77,12 @@ export default function DashboardPage() {
   };
 
   const handleDeleteJob = async (jobId: string) => {
-    const token = getToken() as string;
-    await api.deleteJob(token, jobId);
-    setJobs(jobs.filter(j => j._id !== jobId));
-  };
+  const confirmed = window.confirm('Are you sure you want to delete this job?');
+  if (!confirmed) return;
+  const token = getToken() as string;
+  await api.deleteJob(token, jobId);
+  setJobs(jobs.filter(j => j._id !== jobId));
+};
 
   const handleUpdateStatus = async (jobId: string, status: string) => {
     const token = getToken() as string;
