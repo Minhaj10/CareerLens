@@ -98,3 +98,26 @@
 - Add update job status from frontend
 - Make dashboard look more polished
 - LeetCode — Valid Palindrome #125
+
+## May 23, 2026
+### ✅ What I did today
+- Fixed all Day 6 code review issues
+- Added .env.example file
+- Added delete confirmation popup
+- Added input validation on backend
+- Added email format validation on User model
+- Added proper error handling in api.ts
+- Built search and filter by status
+- Built sort by date, salary, company
+- Built edit job modal with all fields
+- Added applied date picker
+- Solved LeetCode Reverse String #344 — perfect solution!
+
+### ❌ Blockers
+- Uncontrolled input error on date field
+  Fixed by adding default date in emptyForm
+
+### 🎯 Tomorrow's Goal
+- Start AI features — connect Claude API
+- Build resume upload feature
+- This is the most exciting part!

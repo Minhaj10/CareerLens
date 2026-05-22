@@ -301,3 +301,121 @@ A: One HashMap. Count up for s, count down for t.
 Q: What is the space complexity of anagram check?
 A: O(1) technically — only 26 letters in alphabet.
    Map never grows beyond 26 keys regardless of input size.
+
+## Controlled vs Uncontrolled Inputs in React
+### What I learned
+- Controlled input = value controlled by React state
+- Uncontrolled input = value managed by the DOM itself
+- NEVER switch between controlled and uncontrolled
+- Always initialise state with a default value not undefined
+
+### Bad vs Good
+// ❌ Bad — starts undefined
+const [form, setForm] = useState({
+  appliedDate: undefined  // causes warning!
+})
+
+// ✅ Good — always has a value
+const [form, setForm] = useState({
+  appliedDate: new Date().toISOString().slice(0, 10)
+})
+
+### Interview Questions
+Q: What is a controlled component in React?
+A: A component where form data is handled by React state.
+   Every keystroke updates state via onChange handler.
+   Value always comes from state — React is in control.
+
+Q: What causes the uncontrolled to controlled warning?
+A: When value prop changes from undefined to a real value.
+   Always initialise your state with empty string or
+   default value — never undefined or null.
+
+## Array/Object Spread in React Forms
+### What I learned
+- Spread operator copies all existing form fields
+- Only updates the field you specify
+- Keeps all other fields unchanged
+
+### Example
+setForm({ ...form, company: e.target.value })
+// copies all form fields
+// only updates company
+// role, status, salary etc stay the same
+
+### Interview Questions
+Q: What does the spread operator do in JavaScript?
+A: Copies all properties from one object into another.
+   {...form, company: 'Google'} creates a new object
+   with all form fields plus company set to Google.
+
+Q: Why do we spread state when updating in React?
+A: React state should be immutable — never mutate
+   directly. Spread creates a new object with the
+   change, triggering a re-render correctly.
+
+## Modal Pattern in React
+### What I learned
+- Modal = popup that appears over the page
+- Use state to control if modal is visible
+- Fixed positioning covers the whole screen
+- Click outside or cancel button closes it
+- editingJob === null means modal is hidden
+
+### Example
+{editingJob && (
+  <div className="fixed inset-0 bg-black bg-opacity-30">
+    // modal content here
+  </div>
+)}
+
+### Interview Questions
+Q: How do you build a modal in React?
+A: Use a state variable to track if modal is open.
+   When open, render a fixed positioned overlay div
+   that covers the screen. Show modal content inside.
+   Update state to false to close it.
+
+## Filter + Sort Pattern in React
+### What I learned
+- Never filter the original array
+- Create a derived filteredJobs from jobs state
+- Chain .filter() and .sort() together
+- Rerenders automatically when search or filter changes
+
+### Example
+const filteredJobs = jobs
+  .filter(j => j.company.includes(search))
+  .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+### Interview Questions
+Q: How do you filter a list in React?
+A: Use Array.filter() on your state array to create
+   a derived array. Display the filtered array not
+   the original. React re-renders when filter state changes.
+
+Q: What is the difference between filter() and find()?
+A: filter() returns ALL matching items as an array.
+   find() returns the FIRST matching item or undefined.
+   Use filter for lists, find for single lookups.
+
+## Two Pointer Pattern — Summary
+### What I learned
+- Most common pattern after HashMap
+- Use when working with arrays or strings
+- One pointer at start, one at end
+- Move inward based on condition
+
+### Problems solved with Two Pointers
+- Valid Palindrome → compare and skip non-alphanumeric
+- Reverse String  → swap and move inward
+
+### Interview Questions
+Q: When do you use the two pointer pattern?
+A: When you need to compare or process elements
+   from both ends of an array or string simultaneously.
+   Common for palindrome checks, reversals, and pair finding.
+
+Q: What is the space complexity of two pointer solutions?
+A: Usually O(1) — you only use two integer variables
+   regardless of input size. Very memory efficient.
