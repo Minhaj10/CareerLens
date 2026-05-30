@@ -88,6 +88,37 @@ export const api = {
     } catch {
       return { message: 'Cannot connect to server' };
     }
+  },
+
+  analyseResume: async (token: string, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('resume', file);
+      const res = await fetch(`${API_URL}/ai/analyse-resume`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      return handleResponse(res);
+    } catch {
+      return { message: 'Cannot connect to server' };
+    }
+  },
+
+  jobMatch: async (token: string, resumeText: string, jobDescription: string) => {
+    try {
+      const res = await fetch(`${API_URL}/ai/job-match`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ resumeText, jobDescription })
+      });
+      return handleResponse(res);
+    } catch {
+      return { message: 'Cannot connect to server' };
+    }
   }
 };
 
