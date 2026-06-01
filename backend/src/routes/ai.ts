@@ -116,4 +116,51 @@ Respond with ONLY this JSON, no markdown, no backticks:
   }
 });
 
+// POST — Cover letter generator
+router.post('/cover-letter', async (req: AuthRequest, res: Response) => {
+  try {
+    const { resumeText, jobDescription, companyName, roleName } = req.body;
+
+    if (!resumeText || !jobDescription) {
+      return res.status(400).json({ message: 'Resume text and job description required' });
+    }
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 1024,
+      messages: [
+        {
+          role: 'user',
+          content: `You are a professional career coach. Write a compelling cover letter.
+
+Candidate Resume:
+${resumeText}
+
+Job Description:
+${jobDescription}
+
+Company: ${companyName || 'the company'}
+Role: ${roleName || 'the position'}
+
+Write a professional cover letter that:
+- Opens with a strong hook
+- Highlights 2-3 relevant skills from the resume
+- Shows enthusiasm for the specific company
+- Is 3 paragraphs max
+- Ends with a clear call to action
+
+Respond with ONLY the cover letter text, no JSON, no markdown, no backticks.`
+        }
+      ]
+    });
+
+    const coverLetter = message.content[0].type === 'text' ? message.content[0].text : '';
+    res.json({ coverLetter });
+
+  } catch (error) {
+    console.error('Cover letter error:', error);
+    res.status(500).json({ message: 'Cover letter generation failed' });
+  }
+});
+
 export default router;

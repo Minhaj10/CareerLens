@@ -119,6 +119,22 @@ export const api = {
     } catch {
       return { message: 'Cannot connect to server' };
     }
+  },
+
+  coverLetter: async (token: string, resumeText: string, jobDescription: string, companyName: string, roleName: string) => {
+    try {
+      const res = await fetch(`${API_URL}/ai/cover-letter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ resumeText, jobDescription, companyName, roleName })
+      });
+      return handleResponse(res);
+    } catch {
+      return { message: 'Cannot connect to server' };
+    }
   }
 };
 

@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, getToken } from '@/lib/api';
 
@@ -22,8 +21,7 @@ interface JobMatch {
 }
 
 export default function AIPage() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'resume' | 'jobmatch'>('resume');
+  const [activeTab, setActiveTab] = useState<'resume' | 'jobmatch' | 'coverletter'>('resume');
 
   // Resume analyser state
   const [file, setFile] = useState<File | null>(null);
@@ -38,15 +36,20 @@ export default function AIPage() {
   const [jobMatch, setJobMatch] = useState<JobMatch | null>(null);
   const [jobMatchError, setJobMatchError] = useState('');
 
+  // Cover letter state
+  const [companyName, setCompanyName] = useState('');
+  const [roleName, setRoleName] = useState('');
+  const [coverLetter, setCoverLetter] = useState('');
+  const [generatingLetter, setGeneratingLetter] = useState(false);
+  const [coverLetterError, setCoverLetterError] = useState('');
+
   const handleAnalyseResume = async () => {
     if (!file) return;
     setAnalysing(true);
     setResumeError('');
     setAnalysis(null);
-
     const token = getToken() as string;
     const data = await api.analyseResume(token, file);
-
     if (data.analysis) {
       setAnalysis(data.analysis);
       setResumeText(data.resumeText);
@@ -64,16 +67,37 @@ export default function AIPage() {
     setMatching(true);
     setJobMatchError('');
     setJobMatch(null);
-
     const token = getToken() as string;
     const data = await api.jobMatch(token, resumeText, jobDescription);
-
     if (data.match) {
       setJobMatch(data.match);
     } else {
       setJobMatchError(data.message || 'Job match failed');
     }
     setMatching(false);
+  };
+
+  const handleCoverLetter = async () => {
+    if (!resumeText || !jobDescription) {
+      setCoverLetterError('Please analyse your resume and add a job description first');
+      return;
+    }
+    setGeneratingLetter(true);
+    setCoverLetterError('');
+    setCoverLetter('');
+    const token = getToken() as string;
+    const data = await api.coverLetter(token, resumeText, jobDescription, companyName, roleName);
+    if (data.coverLetter) {
+      setCoverLetter(data.coverLetter);
+    } else {
+      setCoverLetterError(data.message || 'Generation failed');
+    }
+    setGeneratingLetter(false);
+  };
+
+  const handleCopyLetter = () => {
+    navigator.clipboard.writeText(coverLetter);
+    alert('Cover letter copied to clipboard!');
   };
 
   const scoreColor = (score: number) => {
@@ -95,7 +119,7 @@ export default function AIPage() {
       <nav className="bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
         <h1 className="text-xl font-bold text-gray-900">CareerLens</h1>
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-900">
+          <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
             Dashboard
           </Link>
           <span className="text-sm font-medium text-gray-900">AI Tools</span>
@@ -111,36 +135,31 @@ export default function AIPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setActiveTab('resume')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-              ${activeTab === 'resume'
-                ? 'bg-gray-900 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-900'
-              }`}
-          >
-            Resume Analyser
-          </button>
-          <button
-            onClick={() => setActiveTab('jobmatch')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-              ${activeTab === 'jobmatch'
-                ? 'bg-gray-900 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-900'
-              }`}
-          >
-            Job Match Scorer
-          </button>
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {[
+            { id: 'resume', label: 'Resume Analyser' },
+            { id: 'jobmatch', label: 'Job Match Scorer' },
+            { id: 'coverletter', label: 'Cover Letter' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                ${activeTab === tab.id
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-900'
+                }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Resume Analyser Tab */}
         {activeTab === 'resume' && (
           <div>
-            {/* Upload Section */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Your Resume</h3>
-
               <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-gray-400 transition-colors">
                 <div className="text-4xl mb-3">📄</div>
                 <p className="text-sm text-gray-500 mb-4">Upload your resume as PDF</p>
@@ -161,11 +180,9 @@ export default function AIPage() {
                   <p className="text-sm text-green-600 mt-3">✓ {file.name}</p>
                 )}
               </div>
-
               {resumeError && (
                 <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mt-4">{resumeError}</div>
               )}
-
               <button
                 onClick={handleAnalyseResume}
                 disabled={!file || analysing}
@@ -175,18 +192,14 @@ export default function AIPage() {
               </button>
             </div>
 
-            {/* Analysis Results */}
             {analysis && (
               <div className="space-y-4">
-
-                {/* Score */}
                 <div className={`bg-white rounded-2xl border p-6 ${scoreBg(analysis.score)}`}>
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium text-gray-600">Resume Score</div>
                       <div className={`text-5xl font-bold mt-1 ${scoreColor(analysis.score)}`}>
-                        {analysis.score}
-                        <span className="text-2xl text-gray-400">/100</span>
+                        {analysis.score}<span className="text-2xl text-gray-400">/100</span>
                       </div>
                     </div>
                     <div className="text-5xl">
@@ -196,7 +209,6 @@ export default function AIPage() {
                   <p className="text-sm text-gray-600 mt-3">{analysis.summary}</p>
                 </div>
 
-                {/* Strengths */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <h4 className="font-semibold text-gray-900 mb-3">✅ Strengths</h4>
                   <ul className="space-y-2">
@@ -208,7 +220,6 @@ export default function AIPage() {
                   </ul>
                 </div>
 
-                {/* Improvements */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <h4 className="font-semibold text-gray-900 mb-3">🔧 Areas to Improve</h4>
                   <ul className="space-y-2">
@@ -220,7 +231,6 @@ export default function AIPage() {
                   </ul>
                 </div>
 
-                {/* Missing Keywords */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <h4 className="font-semibold text-gray-900 mb-3">🔑 Missing Keywords</h4>
                   <div className="flex flex-wrap gap-2">
@@ -232,7 +242,6 @@ export default function AIPage() {
                   </div>
                 </div>
 
-                {/* Recommended Roles */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <h4 className="font-semibold text-gray-900 mb-3">💼 Recommended Roles</h4>
                   <div className="flex flex-wrap gap-2">
@@ -244,7 +253,6 @@ export default function AIPage() {
                   </div>
                 </div>
 
-                {/* Go to Job Match */}
                 <button
                   onClick={() => setActiveTab('jobmatch')}
                   className="w-full bg-gray-900 text-white rounded-lg py-3 text-sm font-medium hover:bg-gray-700 transition-colors"
@@ -266,11 +274,8 @@ export default function AIPage() {
                   ? '✅ Resume loaded — paste a job description below'
                   : '⚠️ Please analyse your resume first on the Resume tab'}
               </p>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Paste Job Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Paste Job Description</label>
                 <textarea
                   value={jobDescription}
                   onChange={e => setJobDescription(e.target.value)}
@@ -279,11 +284,9 @@ export default function AIPage() {
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
                 />
               </div>
-
               {jobMatchError && (
                 <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mt-4">{jobMatchError}</div>
               )}
-
               <button
                 onClick={handleJobMatch}
                 disabled={!jobDescription || matching || !resumeText}
@@ -293,18 +296,14 @@ export default function AIPage() {
               </button>
             </div>
 
-            {/* Job Match Results */}
             {jobMatch && (
               <div className="space-y-4">
-
-                {/* Match Score */}
                 <div className={`bg-white rounded-2xl border p-6 ${scoreBg(jobMatch.matchScore)}`}>
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium text-gray-600">Match Score</div>
                       <div className={`text-5xl font-bold mt-1 ${scoreColor(jobMatch.matchScore)}`}>
-                        {jobMatch.matchScore}
-                        <span className="text-2xl text-gray-400">%</span>
+                        {jobMatch.matchScore}<span className="text-2xl text-gray-400">%</span>
                       </div>
                     </div>
                     <div className="text-5xl">
@@ -314,7 +313,6 @@ export default function AIPage() {
                   <p className="text-sm text-gray-600 mt-3">{jobMatch.summary}</p>
                 </div>
 
-                {/* Matching Skills */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <h4 className="font-semibold text-gray-900 mb-3">✅ Skills You Have</h4>
                   <div className="flex flex-wrap gap-2">
@@ -326,7 +324,6 @@ export default function AIPage() {
                   </div>
                 </div>
 
-                {/* Missing Skills */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <h4 className="font-semibold text-gray-900 mb-3">❌ Skills to Learn</h4>
                   <div className="flex flex-wrap gap-2">
@@ -338,7 +335,6 @@ export default function AIPage() {
                   </div>
                 </div>
 
-                {/* Recommendations */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <h4 className="font-semibold text-gray-900 mb-3">💡 Recommendations</h4>
                   <ul className="space-y-2">
@@ -348,6 +344,86 @@ export default function AIPage() {
                       </li>
                     ))}
                   </ul>
+                </div>
+
+                <button
+                  onClick={() => setActiveTab('coverletter')}
+                  className="w-full bg-gray-900 text-white rounded-lg py-3 text-sm font-medium hover:bg-gray-700 transition-colors"
+                >
+                  Generate Cover Letter →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Cover Letter Tab */}
+        {activeTab === 'coverletter' && (
+          <div>
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Cover Letter Generator</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                {resumeText
+                  ? '✅ Resume loaded — fill in details below'
+                  : '⚠️ Please analyse your resume first on the Resume tab'}
+              </p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                    <input
+                      value={companyName}
+                      onChange={e => setCompanyName(e.target.value)}
+                      placeholder="Google"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Role Name</label>
+                    <input
+                      value={roleName}
+                      onChange={e => setRoleName(e.target.value)}
+                      placeholder="Frontend Developer"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+                  <textarea
+                    value={jobDescription}
+                    onChange={e => setJobDescription(e.target.value)}
+                    placeholder="Paste the job description here..."
+                    rows={6}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+                  />
+                </div>
+                {coverLetterError && (
+                  <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{coverLetterError}</div>
+                )}
+                <button
+                  onClick={handleCoverLetter}
+                  disabled={!jobDescription || generatingLetter || !resumeText}
+                  className="w-full bg-gray-900 text-white rounded-lg py-3 text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                >
+                  {generatingLetter ? '🤖 Writing your cover letter...' : 'Generate Cover Letter'}
+                </button>
+              </div>
+            </div>
+
+            {coverLetter && (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-semibold text-gray-900">Your Cover Letter</h4>
+                  <button
+                    onClick={handleCopyLetter}
+                    className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Copy to Clipboard
+                  </button>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-6 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap border border-gray-100">
+                  {coverLetter}
                 </div>
               </div>
             )}
